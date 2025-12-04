@@ -63,6 +63,8 @@ app.get("/users/all", async (req, res) => {
 app.get("/", (req, res) => res.send("Backend working"));
 
 const PORT = process.env.PORT;
-app.listen(PORT, () => console.log("Server running on PORT", PORT));
+app.listen(PORT, () => console.log("Server running on PORT " + PORT));
+
+
 
 
