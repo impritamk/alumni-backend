@@ -7,10 +7,11 @@ import dotenv from "dotenv";
 
 dotenv.config();
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-// -------------------- REGISTER --------------------
+// -------- REGISTER --------
 app.post("/auth/register", async (req, res) => {
   const { email, password, first_name, last_name } = req.body;
 
@@ -24,23 +25,24 @@ app.post("/auth/register", async (req, res) => {
       [email, hashed, first_name, last_name]
     );
 
-    return res.json({ message: "Registered", user: result.rows[0] });
-
+    res.json({ message: "Registered", user: result.rows[0] });
   } catch (e) {
-    return res.status(400).json({ error: "Email already exists" });
+    res.status(400).json({ error: "Email already exists" });
   }
 });
 
-// -------------------- LOGIN --------------------
+// -------- LOGIN --------
 app.post("/auth/login", async (req, res) => {
   const { email, password } = req.body;
 
   const result = await pool.query("SELECT * FROM users WHERE email=$1", [email]);
+
   if (result.rows.length === 0)
     return res.status(400).json({ error: "Invalid email" });
 
   const user = result.rows[0];
   const match = await bcrypt.compare(password, user.password);
+
   if (!match) return res.status(400).json({ error: "Wrong password" });
 
   const token = jwt.sign(
@@ -49,22 +51,25 @@ app.post("/auth/login", async (req, res) => {
     { expiresIn: "7d" }
   );
 
-  return res.json({ message: "Login success", token, user });
+  res.json({ message: "Login success", token, user });
 });
 
-// -------------------- DIRECTORY --------------------
+// -------- DIRECTORY --------
 app.get("/users/all", async (req, res) => {
   const data = await pool.query(
-    "SELECT id, first_name, last_name, bio, skills, passout_year, profile_picture_url FROM users"
+    "SELECT id, first_name, last_name, bio, skills, passout_year FROM users"
   );
   res.json(data.rows);
 });
 
-app.get("/", (req, res) => res.send("Backend working"));
+// -------- ROOT --------
+app.get("/", (req, res) => {
+  res.send("Backend working");
+});
 
-const PORT = process.env.PORT;
-app.listen(PORT, () => console.log("Server running on PORT " + PORT));
+// -------- START SERVER --------
+const PORT = Number(process.env.PORT) || 3000;
 
-
-
-
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on PORT: ${PORT}`);
+});
